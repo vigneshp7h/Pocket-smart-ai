@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Create Account - PocketSmart{% endblock %}
+{% block content %}
+<div style="max-width: 440px; margin: 2rem auto;">
+  <div class="form-card" style="padding: 2.2rem 2rem;">
+    <div class="page-header" style="margin-bottom: 1.5rem;">
+      <h1>PocketSmart</h1>
+      <p>AI-Powered Budget Planning</p>
+      <h2 style="margin-top: 1rem; font-size: 1.3rem;">Create Your Account</h2>
+    </div>
+    <div id="error-alert" style="display:none; color: #dc2626; background: #fee2e2; padding: 0.6rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; text-align: center;"></div>
+    <form id="registerForm">
+      <div class="form-group" style="margin-bottom: 0.8rem;">
+        <label>Username</label>
+        <input type="text" id="username" class="form-control" placeholder="Choose a username" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 0.8rem;">
+        <label>Email</label>
+        <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 0.8rem;">
+        <label>Password</label>
+        <input type="password" id="password" class="form-control" placeholder="Create a strong password" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 1.2rem;">
+        <label>Confirm Password</label>
+        <input type="password" id="confirm_password" class="form-control" placeholder="Confirm your password" required>
+      </div>
+      <button type="submit" class="btn-submit" style="max-width: 100%;">Create Account</button>
+    </form>
+    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+      Already have an account? <a href="/login" style="color: var(--accent-blue); text-decoration: none;">Sign In</a>
+    </p>
+  </div>
+</div>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alert = document.getElementById('error-alert');
+  alert.style.display = 'none';
+
+  const u = document.getElementById('username').value;
+  const em = document.getElementById('email').value;
+  const p = document.getElementById('password').value;
+  const cp = document.getElementById('confirm_password').value;
+
+  if (p !== cp) {
+    alert.innerText = "Passwords do not match";
+    alert.style.display = 'block';
+    return;
+  }
+
+  const res = await fetch('/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: u, email: em, password: p })
+  });
+
+  if (res.ok) {
+    window.location.href = '/login';
+  } else {
+    const err = await res.json();
+    alert.innerText = err.detail || 'Registration failed.';
+    alert.style.display = 'block';
+  }
+});
+</script>
+{% endblock %}

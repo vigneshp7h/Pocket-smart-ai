@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Party Budget Planner - PocketSmart{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Party Budget Planner</h1>
+  <p>Plan your perfect event with AI-powered budget recommendations</p>
+</div>
+
+<form id="partyPlannerForm">
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-coins"></i> Basic Information</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Total Budget (₹)</label>
+        <input type="number" id="total_budget" class="form-control" value="25000" min="500" required>
+      </div>
+      <div class="form-group">
+        <label>Number of Guests</label>
+        <input type="number" id="num_guests" class="form-control" value="20" min="1" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-champagne-glasses"></i> Event Details</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Party Type</label>
+        <input type="text" id="party_type" class="form-control" value="Birthday Party" placeholder="e.g. Birthday, Anniversary, Reunion" required>
+      </div>
+      <div class="form-group">
+        <label>Venue Type</label>
+        <input type="text" id="venue_type" class="form-control" value="Home" placeholder="e.g. Home, Outdoor Lawn, Banquet">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-list-check"></i> Party Needs</div>
+    <div class="checkbox-group">
+      <label class="checkbox-item"><input type="checkbox" id="needs_catering" checked> Catering</label>
+      <label class="checkbox-item"><input type="checkbox" id="needs_decoration" checked> Decoration</label>
+      <label class="checkbox-item"><input type="checkbox" id="needs_entertainment" checked> Entertainment</label>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-message"></i> Additional Requirements</div>
+    <div class="form-group">
+      <label>Special Requests, Themes, Dietary Needs</label>
+      <textarea id="additional_requirements" class="form-control" rows="3" placeholder="Vegetarian food, superhero theme..."></textarea>
+    </div>
+  </div>
+
+  <button type="submit" class="btn-submit"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Budget Plan</button>
+</form>
+
+<div class="spinner" id="spinner"></div>
+
+<div id="results" class="results-container">
+  <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+    <h2 style="color: var(--primary-navy);" id="partyTitleHeader">Your Party Budget Plan</h2>
+    <button onclick="window.print()" class="badge-link badge-generic" style="cursor:pointer; padding: 0.5rem 1rem;">Print / Save</button>
+  </div>
+
+  <div class="summary-card">
+    <div>Total Budget: <span class="value" id="summaryTotal">₹0</span></div>
+    <div>Remaining: <span class="value" id="summaryRemaining">₹0</span></div>
+  </div>
+
+  <div id="partyBreakdownContainer"></div>
+  <div id="venueContainer"></div>
+
+  <div class="form-card" id="suggestionsCard" style="display:none;">
+    <div class="form-card-title"><i class="fa-solid fa-lightbulb"></i> Event Tips</div>
+    <ul id="suggestionsList" style="padding-left: 1.2rem; color: var(--text-dark); line-height: 1.6;"></ul>
+  </div>
+</div>
+
+<script>
+document.getElementById('partyPlannerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const spinner = document.getElementById('spinner');
+  const results = document.getElementById('results');
+  spinner.style.display = 'block';
+  results.style.display = 'none';
+
+  const payload = {
+    total_budget: parseFloat(document.getElementById('total_budget').value),
+    party_type: document.getElementById('party_type').value,
+    num_guests: parseInt(document.getElementById('num_guests').value),
+    venue_type: document.getElementById('venue_type').value,
+    needs_catering: document.getElementById('needs_catering').checked,
+    needs_decoration: document.getElementById('needs_decoration').checked,
+    needs_entertainment: document.getElementById('needs_entertainment').checked,
+    additional_requirements: document.getElementById('additional_requirements').value
+  };
+
+  try {
+    const res = await fetch('/party-budget', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    spinner.style.display = 'none';
+
+    document.getElementById('summaryTotal').innerText = `₹${data.total_budget}`;
+    document.getElementById('summaryRemaining').innerText = `₹${data.remaining_budget || 0}`;
+
+    const pContainer = document.getElementById('partyBreakdownContainer');
+    pContainer.innerHTML = '';
+
+    (data.budget_breakdown || []).forEach(cat => {
+      let rows = '';
+      (cat.items || []).forEach(it => {
+        let linksHtml = '';
+        if (it.shopping_links) {
+          for (const [platform, link] of Object.entries(it.shopping_links)) {
+            linksHtml += `<a href="${link}" target="_blank" class="badge-link badge-${platform}">${platform.toUpperCase()}</a> `;
+          }
+        }
+        rows += `
+          <tr>
+            <td><strong>${it.name}</strong></td>
+            <td>${it.description}</td>
+            <td>₹${it.estimated_price}</td>
+            <td><div class="badge-links">${linksHtml}</div></td>
+          </tr>
+        `;
+      });
+
+      pContainer.innerHTML += `
+        <div class="recommendation-card">
+          <div class="rec-header">
+            <span>${cat.category.toUpperCase()}</span>
+            <span>Est. Allocation: ₹${cat.allocation || 0}</span>
+          </div>
+          <table class="rec-table">
+            <thead>
+              <tr><th>Item</th><th>Description</th><th>Price</th><th>Shop On</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    });
+
+    const vContainer = document.getElementById('venueContainer');
+    vContainer.innerHTML = '';
+    if (data.venue_suggestions && data.venue_suggestions.length > 0) {
+      let venueCards = '';
+      data.venue_suggestions.forEach(v => {
+        let vLinks = '';
+        if (v.search_links) {
+          for (const [plat, link] of Object.entries(v.search_links)) {
+            vLinks += `<a href="${link}" target="_blank" class="badge-link badge-generic">${plat}</a> `;
+          }
+        }
+        venueCards += `
+          <div style="padding: 0.8rem 0; border-bottom: 1px solid var(--border-light);">
+            <strong>${v.name}</strong> (${v.type}) - Capacity: ${v.capacity} guests | Est: ₹${v.estimated_cost}
+            <div class="badge-links" style="margin-top: 0.4rem;">${vLinks}</div>
+          </div>
+        `;
+      });
+      vContainer.innerHTML = `
+        <div class="form-card">
+          <div class="form-card-title"><i class="fa-solid fa-map-pin"></i> Venue Suggestions</div>
+          ${venueCards}
+        </div>
+      `;
+    }
+
+    if (data.additional_suggestions && data.additional_suggestions.length > 0) {
+      const sList = document.getElementById('suggestionsList');
+      sList.innerHTML = '';
+      data.additional_suggestions.forEach(s => sList.innerHTML += `<li>${s}</li>`);
+      document.getElementById('suggestionsCard').style.display = 'block';
+    }
+
+    results.style.display = 'block';
+  } catch (err) {
+    spinner.style.display = 'none';
+    alert('Error generating party recommendations.');
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Sign In - PocketSmart{% endblock %}
+{% block content %}
+<div style="max-width: 420px; margin: 3rem auto;">
+  <div class="form-card" style="padding: 2.5rem 2rem;">
+    <div class="page-header" style="margin-bottom: 1.5rem;">
+      <h1>PocketSmart</h1>
+      <p>AI-Powered Budget Planning</p>
+      <h2 style="margin-top: 1rem; font-size: 1.3rem;">Welcome Back</h2>
+    </div>
+    <div id="error-alert" style="display:none; color: #dc2626; background: #fee2e2; padding: 0.6rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; text-align: center;"></div>
+    <form id="loginForm">
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <label>Username</label>
+        <input type="text" id="username" class="form-control" placeholder="Enter your username" required>
+      </div>
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label>Password</label>
+        <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="btn-submit" style="max-width: 100%;">Sign In &rarr;</button>
+    </form>
+    <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+      Don't have an account? <a href="/register" style="color: var(--accent-blue); text-decoration: none;">Create Account</a>
+    </p>
+  </div>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const alert = document.getElementById('error-alert');
+  alert.style.display = 'none';
+
+  const formData = new URLSearchParams();
+  formData.append('username', document.getElementById('username').value);
+  formData.append('password', document.getElementById('password').value);
+
+  const res = await fetch('/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData
+  });
+
+  if (res.ok) {
+    window.location.href = '/dashboard';
+  } else {
+    const err = await res.json();
+    alert.innerText = err.detail || 'Sign-in failed. Please verify credentials.';
+    alert.style.display = 'block';
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}PocketSmart: AI Budget Planner{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <header class="navbar">
+    <a href="/dashboard" class="brand">
+      <i class="fa-solid fa-wallet text-amber-500"></i> PocketSmart
+    </a>
+    <nav class="nav-links">
+      {% if user %}
+        <a href="/dashboard"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+        <a href="/home-planner"><i class="fa-solid fa-house"></i> Home Planner</a>
+        <a href="/party-planner"><i class="fa-solid fa-champagne-glasses"></i> Party Planner</a>
+        <a href="/jewelry-planner"><i class="fa-solid fa-gem"></i> Jewelry Planner</a>
+        <a href="/history"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
+        <form action="/logout" method="post" style="display:inline;">
+          <button type="submit"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+        </form>
+      {% else %}
+        <a href="/login">Sign In</a>
+        <a href="/register" class="btn-nav-primary">Get Started</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <p>&copy; 2026 PocketSmart. All rights reserved.</p>
+  </footer>
+</body>
+</html>

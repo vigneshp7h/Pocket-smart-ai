@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}PocketSmart - AI Budget Planner{% endblock %}
+{% block content %}
+<div class="page-header" style="margin-top: 2rem;">
+  <h1 style="font-size: 2.8rem;">PocketSmart</h1>
+  <h3 style="color: var(--primary-navy); font-weight: 500;">AI-Powered Budget Planning for Everyday Needs</h3>
+  <p style="margin-top: 1rem; max-width: 600px; margin-inline: auto;">
+    Make smarter financial decisions with personalized budget recommendations for home interiors, parties, and jewelry purchases.
+  </p>
+  <div style="margin-top: 1.5rem; display: flex; justify-content: center; gap: 1rem;">
+    <a href="/register" class="btn-submit" style="margin: 0; width: auto;">Get Started</a>
+    <a href="/login" class="btn-submit" style="margin: 0; width: auto; background: white; color: var(--primary-navy); border: 1px solid var(--border-light);">Sign In</a>
+  </div>
+</div>
+
+<div style="margin-top: 4rem;">
+  <h2 style="text-align: center; color: var(--primary-navy); margin-bottom: 2rem;">Our Smart Budget Planners</h2>
+  <div class="form-grid">
+    <div class="form-card" style="text-align: center;">
+      <i class="fa-solid fa-house" style="font-size: 2.5rem; color: var(--accent-blue); margin-bottom: 1rem;"></i>
+      <h3 style="margin-bottom: 0.5rem;">Home Interior Planner</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Personalized allocations for fixtures, lighting, and furniture suited for Indian apartments.</p>
+    </div>
+    <div class="form-card" style="text-align: center;">
+      <i class="fa-solid fa-champagne-glasses" style="font-size: 2.5rem; color: var(--accent-orange); margin-bottom: 1rem;"></i>
+      <h3 style="margin-bottom: 0.5rem;">Party Budget Planner</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Plan gatherings, birthdays, or weddings with venue, catering, and supply breakdowns.</p>
+    </div>
+    <div class="form-card" style="text-align: center;">
+      <i class="fa-solid fa-gem" style="font-size: 2.5rem; color: #06b6d4; margin-bottom: 1rem;"></i>
+      <h3 style="margin-bottom: 0.5rem;">Jewelry Budget Planner</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Upload your outfit to receive multimodal vision recommendations on jewelry matches.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Home Interior Budget Planner - PocketSmart{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Home Interior Budget Planner</h1>
+  <p>Create a customized budget plan for your dream home interior</p>
+</div>
+
+<form id="homePlannerForm">
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-dollar-sign"></i> Budget Details</div>
+    <div class="form-group">
+      <label>Total Budget (₹)</label>
+      <input type="number" id="total_budget" class="form-control" value="50000" min="500" required>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-lightbulb"></i> Fixtures & Furniture</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Number of Lights/Fixtures</label>
+        <input type="number" id="num_lights" class="form-control" value="5" min="0">
+      </div>
+      <div class="form-group">
+        <label>Number of Ceiling Fans</label>
+        <input type="number" id="num_fans" class="form-control" value="4" min="0">
+      </div>
+      <div class="form-group">
+        <label>Number of Furniture Pieces</label>
+        <input type="number" id="num_furniture" class="form-control" value="2" min="0">
+      </div>
+      <div class="form-group">
+        <label>Number of Dining Tables</label>
+        <input type="number" id="num_dining_tables" class="form-control" value="1" min="0">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-house"></i> Rooms to Include</div>
+    <div class="checkbox-group">
+      <label class="checkbox-item"><input type="checkbox" id="has_living_room" checked> Living Room</label>
+      <label class="checkbox-item"><input type="checkbox" id="has_kitchen" checked> Kitchen</label>
+      <label class="checkbox-item"><input type="checkbox" id="has_bedroom"> Bedroom</label>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-clipboard-list"></i> Additional Information</div>
+    <div class="form-group">
+      <label>Special Requirements or Preferences</label>
+      <textarea id="additional_requirements" class="form-control" rows="3" placeholder="Minimalist look, warm lighting preference..."></textarea>
+    </div>
+  </div>
+
+  <button type="submit" class="btn-submit"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Recommendations</button>
+</form>
+
+<div class="spinner" id="spinner"></div>
+
+<div id="results" class="results-container">
+  <h2 style="color: var(--primary-navy); margin-bottom: 1rem; text-align: center;">Your Personalized Budget Plan</h2>
+  <div class="summary-card">
+    <div>Total Budget: <span class="value" id="summaryTotal">₹0</span></div>
+    <div>Remaining Budget: <span class="value" id="summaryRemaining">₹0</span></div>
+  </div>
+
+  <div id="breakdownContainer"></div>
+
+  <div class="form-card" id="suggestionsCard" style="display:none;">
+    <div class="form-card-title"><i class="fa-solid fa-lightbulb"></i> Additional Suggestions</div>
+    <ul id="suggestionsList" style="padding-left: 1.2rem; color: var(--text-dark); line-height: 1.6;"></ul>
+  </div>
+</div>
+
+<script>
+document.getElementById('homePlannerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const spinner = document.getElementById('spinner');
+  const results = document.getElementById('results');
+  spinner.style.display = 'block';
+  results.style.display = 'none';
+
+  const payload = {
+    total_budget: parseFloat(document.getElementById('total_budget').value),
+    num_lights: parseInt(document.getElementById('num_lights').value) || 0,
+    num_fans: parseInt(document.getElementById('num_fans').value) || 0,
+    num_furniture: parseInt(document.getElementById('num_furniture').value) || 0,
+    num_dining_tables: parseInt(document.getElementById('num_dining_tables').value) || 0,
+    has_living_room: document.getElementById('has_living_room').checked,
+    has_kitchen: document.getElementById('has_kitchen').checked,
+    has_bedroom: document.getElementById('has_bedroom').checked,
+    additional_requirements: document.getElementById('additional_requirements').value
+  };
+
+  try {
+    const res = await fetch('/home-budget', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    spinner.style.display = 'none';
+
+    document.getElementById('summaryTotal').innerText = `₹${data.total_budget || payload.total_budget}`;
+    document.getElementById('summaryRemaining').innerText = `₹${data.remaining_budget || 0}`;
+
+    const bContainer = document.getElementById('breakdownContainer');
+    bContainer.innerHTML = '';
+
+    (data.budget_breakdown || []).forEach(cat => {
+      let rows = '';
+      (cat.items || []).forEach(it => {
+        let linksHtml = '';
+        if (it.shopping_links) {
+          for (const [platform, link] of Object.entries(it.shopping_links)) {
+            linksHtml += `<a href="${link}" target="_blank" class="badge-link badge-${platform}">${platform.toUpperCase()}</a> `;
+          }
+        }
+        rows += `
+          <tr>
+            <td><strong>${it.name}</strong></td>
+            <td>${it.description}</td>
+            <td>₹${it.estimated_price}</td>
+            <td>${it.quantity}</td>
+            <td><div class="badge-links">${linksHtml}</div></td>
+          </tr>
+        `;
+      });
+
+      bContainer.innerHTML += `
+        <div class="recommendation-card">
+          <div class="rec-header">
+            <span>${cat.category}</span>
+            <span>Allocation: ₹${cat.allocation}</span>
+          </div>
+          <table class="rec-table">
+            <thead>
+              <tr><th>Item</th><th>Description</th><th>Price</th><th>Qty</th><th>Shopping Links</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    });
+
+    if (data.additional_suggestions && data.additional_suggestions.length > 0) {
+      const sList = document.getElementById('suggestionsList');
+      sList.innerHTML = '';
+      data.additional_suggestions.forEach(s => sList.innerHTML += `<li>${s}</li>`);
+      document.getElementById('suggestionsCard').style.display = 'block';
+    }
+
+    results.style.display = 'block';
+  } catch (err) {
+    spinner.style.display = 'none';
+    alert('Failed to generate budget plan. Ensure API keys are active.');
+  }
+});
+</script>
+{% endblock %}

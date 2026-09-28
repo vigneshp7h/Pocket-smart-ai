@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - PocketSmart{% endblock %}
+{% block content %}
+<div class="page-header" style="margin-top: 1.5rem;">
+  <h1>Welcome, {{ user.username }}!</h1>
+  <p>Choose a budget planner to get started with your personalized financial planning experience.</p>
+</div>
+
+<div class="form-grid" style="margin-bottom: 2rem;">
+  <div class="form-card" style="padding: 1.2rem; display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <div style="height: 140px; background: #e2e8f0; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center;">
+        <i class="fa-solid fa-house" style="font-size: 3rem; color: #475569;"></i>
+      </div>
+      <h3 style="margin-bottom: 0.4rem; color: var(--primary-navy);"><i class="fa-solid fa-house"></i> Home Budget Planner</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Plan interior design items, furniture, and lighting tailored within your custom ceiling.</p>
+    </div>
+    <a href="/home-planner" class="btn-submit" style="margin-top: 1.2rem; width: 100%;">Get Started</a>
+  </div>
+
+  <div class="form-card" style="padding: 1.2rem; display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <div style="height: 140px; background: #fee2e2; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center;">
+        <i class="fa-solid fa-champagne-glasses" style="font-size: 3rem; color: #dc2626;"></i>
+      </div>
+      <h3 style="margin-bottom: 0.4rem; color: var(--primary-navy);"><i class="fa-solid fa-champagne-glasses"></i> Party Budget Planner</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Plan any celebration with itemized allocations for venue, catering, and entertainment.</p>
+    </div>
+    <a href="/party-planner" class="btn-submit" style="margin-top: 1.2rem; width: 100%;">Get Started</a>
+  </div>
+
+  <div class="form-card" style="padding: 1.2rem; display: flex; flex-direction: column; justify-content: space-between;">
+    <div>
+      <div style="height: 140px; background: #e0f2fe; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center;">
+        <i class="fa-solid fa-gem" style="font-size: 3rem; color: #0284c7;"></i>
+      </div>
+      <h3 style="margin-bottom: 0.4rem; color: var(--primary-navy);"><i class="fa-solid fa-gem"></i> Jewelry Budget Planner</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Upload an outfit or occasion details to curate jewelry pieces within budget.</p>
+    </div>
+    <a href="/jewelry-planner" class="btn-submit" style="margin-top: 1.2rem; width: 100%;">Get Started</a>
+  </div>
+</div>
+
+<div class="form-card">
+  <div class="form-card-title">
+    <i class="fa-solid fa-clock-rotate-left"></i> Recent Activity
+  </div>
+  {% if history and history|length > 0 %}
+    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+      {% for item in history %}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 1rem; background: var(--bg-light); border-radius: 8px;">
+          <div>
+            <strong>{{ item.recommendation_type|capitalize }} Plan</strong>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">{{ item.input_summary }}</p>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">{{ item.timestamp }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="color: var(--text-muted); font-size: 0.9rem;">No recent activity found. Run your first budget planner above!</p>
+  {% endif %}
+  <div style="margin-top: 1.2rem;">
+    <a href="/history" style="color: var(--accent-blue); text-decoration: none; font-size: 0.9rem; font-weight: 500;">View All History &rarr;</a>
+  </div>
+</div>
+{% endblock %}

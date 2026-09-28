@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Jewelry Budget Planner - PocketSmart{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Jewelry Budget Planner</h1>
+  <p>Get AI-powered jewelry recommendations within your budget for any occasion</p>
+</div>
+
+<form id="jewelryPlannerForm" enctype="multipart/form-data">
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-dollar-sign"></i> Budget Details</div>
+    <div class="form-group">
+      <label>Total Budget (₹)</label>
+      <input type="number" id="total_budget" name="total_budget" class="form-control" value="20000" min="500" required>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-calendar"></i> Occasion & Preferences</div>
+    <div class="form-group" style="margin-bottom: 1rem;">
+      <label>Occasion</label>
+      <input type="text" id="occasion" name="occasion" class="form-control" placeholder="Wedding, Reception, Birthday" value="Wedding Reception" required>
+    </div>
+    <div class="form-group">
+      <label>Style Preferences</label>
+      <textarea id="preferences" name="preferences" class="form-control" rows="3" placeholder="Describe style, materials (silver, antique, minimal, gold plating)..."></textarea>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-card-title"><i class="fa-solid fa-shirt"></i> Upload Outfit Image</div>
+    <div class="form-group">
+      <label>Upload an image to get matched suggestions</label>
+      <input type="file" id="image" name="image" class="form-control" accept="image/*">
+    </div>
+  </div>
+
+  <button type="submit" class="btn-submit"><i class="fa-solid fa-gem"></i> Get Recommendations</button>
+</form>
+
+<div class="spinner" id="spinner"></div>
+
+<div id="results" class="results-container">
+  <div class="summary-card">
+    <div>Total Budget: <span class="value" id="summaryTotal">₹0</span></div>
+    <div>Remaining Budget: <span class="value" id="summaryRemaining">₹0</span></div>
+  </div>
+
+  <div class="form-card" id="outfitAnalysisCard" style="display:none;">
+    <div class="form-card-title"><i class="fa-solid fa-eye"></i> Outfit Analysis</div>
+    <div id="outfitDetails" style="font-size: 0.95rem; line-height: 1.6;"></div>
+  </div>
+
+  <div class="recommendation-card">
+    <div class="rec-header">
+      <span>Curated Jewelry Matches</span>
+    </div>
+    <table class="rec-table">
+      <thead>
+        <tr><th>Piece</th><th>Description</th><th>Style</th><th>Est. Price</th><th>Shop On</th></tr>
+      </thead>
+      <tbody id="jewelryTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="form-card" id="tipsCard" style="display:none;">
+    <div class="form-card-title"><i class="fa-solid fa-lightbulb"></i> Styling Tips</div>
+    <ul id="tipsList" style="padding-left: 1.2rem; color: var(--text-dark); line-height: 1.6;"></ul>
+  </div>
+</div>
+
+<script>
+document.getElementById('jewelryPlannerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const spinner = document.getElementById('spinner');
+  const results = document.getElementById('results');
+  spinner.style.display = 'block';
+  results.style.display = 'none';
+
+  const formData = new FormData();
+  formData.append('total_budget', document.getElementById('total_budget').value);
+  formData.append('occasion', document.getElementById('occasion').value);
+  formData.append('preferences', document.getElementById('preferences').value);
+
+  const imgFile = document.getElementById('image').files[0];
+  if (imgFile) {
+    formData.append('image', imgFile);
+  }
+
+  try {
+    const res = await fetch('/jewelry-budget', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    spinner.style.display = 'none';
+
+    document.getElementById('summaryTotal').innerText = `₹${data.total_budget}`;
+    document.getElementById('summaryRemaining').innerText = `₹${data.remaining_budget || 0}`;
+
+    if (data.outfit_analysis) {
+      document.getElementById('outfitDetails').innerHTML = `
+        <p><strong>Detected Style:</strong> ${data.outfit_analysis.style || 'N/A'}</p>
+        <p><strong>Colors:</strong> ${(data.outfit_analysis.colors || []).join(', ')}</p>
+        <p><strong>Formality:</strong> ${data.outfit_analysis.formality || 'N/A'}</p>
+      `;
+      document.getElementById('outfitAnalysisCard').style.display = 'block';
+    }
+
+    const tBody = document.getElementById('jewelryTableBody');
+    tBody.innerHTML = '';
+    (data.jewelry_recommendations || []).forEach(it => {
+      let linksHtml = '';
+      if (it.shopping_links) {
+        for (const [platform, link] of Object.entries(it.shopping_links)) {
+          linksHtml += `<a href="${link}" target="_blank" class="badge-link badge-generic">${platform}</a> `;
+        }
+      }
+      tBody.innerHTML += `
+        <tr>
+          <td><strong>${it.item_type}</strong></td>
+          <td>${it.description}</td>
+          <td>${it.style}</td>
+          <td>₹${it.estimated_price}</td>
+          <td><div class="badge-links">${linksHtml}</div></td>
+        </tr>
+      `;
+    });
+
+    if (data.styling_tips && data.styling_tips.length > 0) {
+      const tList = document.getElementById('tipsList');
+      tList.innerHTML = '';
+      data.styling_tips.forEach(t => tList.innerHTML += `<li>${t}</li>`);
+      document.getElementById('tipsCard').style.display = 'block';
+    }
+
+    results.style.display = 'block';
+  } catch (err) {
+    spinner.style.display = 'none';
+    alert('Failed to generate jewelry recommendations.');
+  }
+});
+</script>
+{% endblock %}
